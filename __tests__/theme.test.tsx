@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, act } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { View, Text, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeProvider, useTheme } from '@/providers/ThemeProvider';
@@ -43,81 +43,89 @@ describe('Theme System', () => {
   });
   
   it('provides the default light theme initially', async () => {
-    let component: any;
+    // Setup AsyncStorage mock to return null (default)
+    (AsyncStorage.getItem as jest.Mock).mockImplementation(() => Promise.resolve(null));
     
-    await act(async () => {
-      component = render(
-        <ThemeProvider>
-          <TestComponent />
-        </ThemeProvider>
-      );
-    });
+    const { getByTestId } = render(
+      <ThemeProvider>
+        <TestComponent />
+      </ThemeProvider>
+    );
     
-    expect(component.getByTestId('theme-type').props.children).toBe('light');
-    expect(component.getByTestId('theme-primary').props.children).toBe(themes.light.colors.primary);
-    expect(component.getByTestId('is-following-system').props.children).toBe('true');
+    // Wait for the theme to be fully initialized
+    await waitFor(() => {
+      expect(getByTestId('theme-type').props.children).toBe('light');
+    }, { timeout: 1000 });
+    
+    expect(getByTestId('theme-primary').props.children).toBe(themes.light.colors.primary);
+    expect(getByTestId('is-following-system').props.children).toBe('true');
   });
   
   it('loads saved theme preference from storage', async () => {
-    (AsyncStorage.getItem as jest.Mock).mockImplementation((key) => {
+    // Setup AsyncStorage mock to return custom values
+    (AsyncStorage.getItem as jest.Mock).mockImplementation((key: string) => {
       if (key === 'mammut_theme') return Promise.resolve('dark');
       if (key === 'mammut_follow_system_theme') return Promise.resolve('false');
       return Promise.resolve(null);
     });
     
-    let component: any;
+    const { getByTestId } = render(
+      <ThemeProvider>
+        <TestComponent />
+      </ThemeProvider>
+    );
     
-    await act(async () => {
-      component = render(
-        <ThemeProvider>
-          <TestComponent />
-        </ThemeProvider>
-      );
-    });
+    // Wait for the theme to be fully initialized with the mock values
+    await waitFor(() => {
+      expect(getByTestId('theme-type').props.children).toBe('dark');
+    }, { timeout: 1000 });
     
-    expect(component.getByTestId('theme-type').props.children).toBe('dark');
-    expect(component.getByTestId('is-following-system').props.children).toBe('false');
+    expect(getByTestId('is-following-system').props.children).toBe('false');
   });
   
   it('changes theme when setTheme is called', async () => {
-    let component: any;
+    const { getByTestId } = render(
+      <ThemeProvider>
+        <TestComponent />
+      </ThemeProvider>
+    );
     
-    await act(async () => {
-      component = render(
-        <ThemeProvider>
-          <TestComponent />
-        </ThemeProvider>
-      );
-    });
+    // Wait for the theme to be fully initialized
+    await waitFor(() => {
+      expect(getByTestId('theme-type').props.children).toBe('light');
+    }, { timeout: 1000 });
     
-    expect(component.getByTestId('theme-type').props.children).toBe('light');
+    // Trigger theme change
+    fireEvent.press(getByTestId('set-dark-theme'));
     
-    await act(async () => {
-      fireEvent.press(component.getByTestId('set-dark-theme'));
-    });
+    // Wait for the theme change to complete
+    await waitFor(() => {
+      expect(getByTestId('theme-type').props.children).toBe('dark');
+    }, { timeout: 1000 });
     
-    expect(component.getByTestId('theme-type').props.children).toBe('dark');
     expect(AsyncStorage.setItem).toHaveBeenCalledWith('mammut_theme', 'dark');
   });
   
   it('toggles following system theme', async () => {
-    let component: any;
+    const { getByTestId } = render(
+      <ThemeProvider>
+        <TestComponent />
+      </ThemeProvider>
+    );
     
-    await act(async () => {
-      component = render(
-        <ThemeProvider>
-          <TestComponent />
-        </ThemeProvider>
-      );
-    });
+    // Wait for the theme to be fully initialized
+    await waitFor(() => {
+      expect(getByTestId('is-following-system').props.children).toBe('true');
+    }, { timeout: 1000 });
     
-    expect(component.getByTestId('is-following-system').props.children).toBe('true');
+    // Toggle following system theme
+    fireEvent.press(getByTestId('toggle-system-theme'));
     
-    await act(async () => {
-      fireEvent.press(component.getByTestId('toggle-system-theme'));
-    });
+    // Wait for the change to complete
+    await waitFor(() => {
+      expect(getByTestId('is-following-system').props.children).toBe('false');
+    }, { timeout: 1000 });
     
-    expect(component.getByTestId('is-following-system').props.children).toBe('false');
     expect(AsyncStorage.setItem).toHaveBeenCalledWith('mammut_follow_system_theme', 'false');
   });
   
@@ -133,21 +141,21 @@ describe('Theme System', () => {
       );
     };
     
-    let component: any;
+    const { getByTestId } = render(
+      <ThemeProvider>
+        <ThemeNames />
+      </ThemeProvider>
+    );
     
-    await act(async () => {
-      component = render(
-        <ThemeProvider>
-          <ThemeNames />
-        </ThemeProvider>
-      );
-    });
+    // Wait for themes to be available
+    await waitFor(() => {
+      expect(getByTestId('theme-light')).toBeTruthy();
+    }, { timeout: 1000 });
     
     // Check for existence of some key themes
-    expect(component.getByTestId('theme-light')).toBeTruthy();
-    expect(component.getByTestId('theme-dark')).toBeTruthy();
-    expect(component.getByTestId('theme-fire')).toBeTruthy();
-    expect(component.getByTestId('theme-water')).toBeTruthy();
-    expect(component.getByTestId('theme-forest')).toBeTruthy();
+    expect(getByTestId('theme-dark')).toBeTruthy();
+    expect(getByTestId('theme-fire')).toBeTruthy();
+    expect(getByTestId('theme-water')).toBeTruthy();
+    expect(getByTestId('theme-forest')).toBeTruthy();
   });
 }); 
