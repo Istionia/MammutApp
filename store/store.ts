@@ -3,9 +3,9 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { persistStore, persistReducer } from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import authReducer from './slices/authSlice';
-import themeReducer from './slices/themeSlice';
-import { rootPersistConfig, rootReducer } from './rootReducer';
+import authReducer from '@/store/slices/authSlice';
+import themeReducer from '@/store/slices/themeSlice';
+import { rootPersistConfig, rootReducer } from '@/store/rootReducer';
 
 // Create a persisted reducer with the root configuration
 const persistedReducer = persistReducer(rootPersistConfig, rootReducer);

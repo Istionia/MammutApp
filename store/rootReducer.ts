@@ -2,8 +2,8 @@ import { combineReducers } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { persistReducer } from 'redux-persist';
 
-import authReducer from './slices/authSlice';
-import themeReducer from './slices/themeSlice';
+import authReducer from '@/store/slices/authSlice';
+import themeReducer from '@/store/slices/themeSlice';
 
 // Configuration for the root persisted reducer
 export const rootPersistConfig = {
