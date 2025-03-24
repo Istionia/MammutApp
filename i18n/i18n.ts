@@ -13,6 +13,9 @@ import { id } from './translations/id';
 import { pt } from './translations/pt';
 import { sw } from './translations/sw';
 import { tr } from './translations/tr';
+import { nl } from './translations/nl';
+import { no } from './translations/no';
+import { ko } from './translations/ko';
 
 // Create i18n instance
 const i18n = new I18n({
@@ -28,7 +31,10 @@ const i18n = new I18n({
   id,
   pt,
   sw,
-  tr
+  tr,
+  nl,
+  no,
+  ko
 });
 
 // Set the locale to the device's locale
