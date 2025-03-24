@@ -5,6 +5,14 @@ import { es } from './translations/es';
 import { fr } from './translations/fr';
 import { de } from './translations/de';
 import { ja } from './translations/ja';
+import { zh } from './translations/zh';
+import { ru } from './translations/ru';
+import { ar } from './translations/ar';
+import { hi } from './translations/hi';
+import { id } from './translations/id';
+import { pt } from './translations/pt';
+import { sw } from './translations/sw';
+import { tr } from './translations/tr';
 
 // Create i18n instance
 const i18n = new I18n({
@@ -13,6 +21,14 @@ const i18n = new I18n({
   fr,
   de,
   ja,
+  zh,
+  ru,
+  ar,
+  hi,
+  id,
+  pt,
+  sw,
+  tr
 });
 
 // Set the locale to the device's locale
