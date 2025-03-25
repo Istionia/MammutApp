@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { MastodonClient } from '../../../services/mastodon/MastodonClient';
 import { MastodonError } from '../../../services/mastodon/types';
 
@@ -16,6 +16,23 @@ describe('MastodonClient', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Create a mock axios instance with interceptors
+    const mockAxiosInstance = {
+      interceptors: {
+        request: {
+          use: jest.fn(),
+        },
+        response: {
+          use: jest.fn(),
+        },
+      },
+      get: jest.fn(),
+      post: jest.fn(),
+      put: jest.fn(),
+      delete: jest.fn(),
+    } as unknown as jest.Mocked<AxiosInstance>;
+    
+    mockedAxios.create.mockReturnValue(mockAxiosInstance);
     client = new MastodonClient(mockConfig);
   });
 
@@ -39,19 +56,20 @@ describe('MastodonClient', () => {
         headers: { 'content-type': 'application/json' },
       };
 
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockResolvedValue(mockResponse),
-      } as any);
+      const mockAxiosInstance = mockedAxios.create();
+      (mockAxiosInstance.get as jest.Mock).mockResolvedValue(mockResponse);
 
       const response = await client.get('/test');
       expect(response).toEqual(mockResponse);
     });
 
     it('should handle network errors', async () => {
-      const networkError = new Error('Network error');
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockRejectedValue(networkError),
-      } as any);
+      const networkError = {
+        request: {},
+        message: 'Network error',
+      };
+      const mockAxiosInstance = mockedAxios.create();
+      (mockAxiosInstance.get as jest.Mock).mockRejectedValue(networkError);
 
       await expect(client.get('/test')).rejects.toThrow('Network error');
     });
@@ -61,22 +79,27 @@ describe('MastodonClient', () => {
         response: {
           data: {
             error: 'Server error',
-            error_description: 'Something went wrong',
           },
         },
+        isAxiosError: true,
       };
 
-      mockedAxios.create.mockReturnValue({
-        get: jest.fn().mockRejectedValue(serverError),
-      } as any);
+      const mockAxiosInstance = mockedAxios.create();
+      (mockAxiosInstance.get as jest.Mock).mockRejectedValue(serverError);
 
       await expect(client.get('/test')).rejects.toThrow('Server error');
     });
 
     it('should retry on 500 errors', async () => {
       const serverError = {
-        response: { status: 500 },
+        response: { 
+          status: 500,
+          data: {
+            error: 'Server error',
+          },
+        },
         config: { url: '/test' },
+        isAxiosError: true,
       };
 
       const successResponse = {
@@ -85,18 +108,16 @@ describe('MastodonClient', () => {
         headers: {},
       };
 
-      const mockAxiosInstance = {
-        get: jest.fn()
-          .mockRejectedValueOnce(serverError)
-          .mockRejectedValueOnce(serverError)
-          .mockResolvedValueOnce(successResponse),
-      };
-
-      mockedAxios.create.mockReturnValue(mockAxiosInstance as any);
+      const mockAxiosInstance = mockedAxios.create();
+      const mockGet = mockAxiosInstance.get as jest.Mock;
+      mockGet
+        .mockRejectedValueOnce(serverError)
+        .mockRejectedValueOnce(serverError)
+        .mockResolvedValueOnce(successResponse);
 
       const response = await client.get('/test');
       expect(response).toEqual(successResponse);
-      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(3);
+      expect(mockGet).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -108,9 +129,8 @@ describe('MastodonClient', () => {
         headers: { 'content-type': 'application/json' },
       };
 
-      mockedAxios.create.mockReturnValue({
-        post: jest.fn().mockResolvedValue(mockResponse),
-      } as any);
+      const mockAxiosInstance = mockedAxios.create();
+      (mockAxiosInstance.post as jest.Mock).mockResolvedValue(mockResponse);
 
       const response = await client.post('/test', { data: 'test' });
       expect(response).toEqual(mockResponse);
@@ -125,9 +145,8 @@ describe('MastodonClient', () => {
         headers: { 'content-type': 'application/json' },
       };
 
-      mockedAxios.create.mockReturnValue({
-        put: jest.fn().mockResolvedValue(mockResponse),
-      } as any);
+      const mockAxiosInstance = mockedAxios.create();
+      (mockAxiosInstance.put as jest.Mock).mockResolvedValue(mockResponse);
 
       const response = await client.put('/test', { data: 'test' });
       expect(response).toEqual(mockResponse);
@@ -142,9 +161,8 @@ describe('MastodonClient', () => {
         headers: { 'content-type': 'application/json' },
       };
 
-      mockedAxios.create.mockReturnValue({
-        delete: jest.fn().mockResolvedValue(mockResponse),
-      } as any);
+      const mockAxiosInstance = mockedAxios.create();
+      (mockAxiosInstance.delete as jest.Mock).mockResolvedValue(mockResponse);
 
       const response = await client.delete('/test');
       expect(response).toEqual(mockResponse);

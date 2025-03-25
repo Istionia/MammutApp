@@ -54,17 +54,8 @@ export class MastodonClient {
           return this.client(originalRequest);
         }
 
-        // Reset retry count on success
+        // Reset retry count
         this.retryCount = 0;
-
-        // Transform error response
-        if (error.response?.data) {
-          const mastodonError: MastodonError = {
-            error: error.response.data.error || 'Unknown error',
-            error_description: error.response.data.error_description,
-          };
-          return Promise.reject(mastodonError);
-        }
 
         return Promise.reject(error);
       }
@@ -76,75 +67,46 @@ export class MastodonClient {
     return null;
   }
 
-  public async get<T>(url: string, config?: AxiosRequestConfig): Promise<MastodonResponse<T>> {
+  public async get<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     try {
-      const response = await this.client.get<T>(url, config);
-      return {
-        data: response.data,
-        status: response.status,
-        headers: response.headers as Record<string, string>,
-      };
+      return await this.client.get<T>(url, config);
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  public async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<MastodonResponse<T>> {
+  public async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     try {
-      const response = await this.client.post<T>(url, data, config);
-      return {
-        data: response.data,
-        status: response.status,
-        headers: response.headers as Record<string, string>,
-      };
+      return await this.client.post<T>(url, data, config);
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  public async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<MastodonResponse<T>> {
+  public async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     try {
-      const response = await this.client.put<T>(url, data, config);
-      return {
-        data: response.data,
-        status: response.status,
-        headers: response.headers as Record<string, string>,
-      };
+      return await this.client.put<T>(url, data, config);
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<MastodonResponse<T>> {
+  public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     try {
-      const response = await this.client.delete<T>(url, config);
-      return {
-        data: response.data,
-        status: response.status,
-        headers: response.headers as Record<string, string>,
-      };
+      return await this.client.delete<T>(url, config);
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  private handleError(error: any): MastodonError {
-    if (axios.isAxiosError(error)) {
-      if (error.response) {
-        return {
-          error: error.response.data.error || 'Server error',
-          error_description: error.response.data.error_description,
-        };
+  private handleError(error: any): never {
+    if (error.isAxiosError) {
+      if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
       } else if (error.request) {
-        return {
-          error: 'Network error',
-          error_description: 'Unable to reach the server',
-        };
+        throw new Error('Network error');
       }
     }
-    return {
-      error: 'Unknown error',
-      error_description: error.message || 'An unexpected error occurred',
-    };
+    throw new Error(error.message || 'An unexpected error occurred');
   }
 } 
