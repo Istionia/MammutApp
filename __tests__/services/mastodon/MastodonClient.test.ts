@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosInterceptorManager, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { MastodonClient } from '../../../services/mastodon/MastodonClient';
 import { MastodonError } from '../../../services/mastodon/types';
 
@@ -53,8 +53,10 @@ describe('MastodonClient', () => {
       const mockResponse = {
         data: { test: 'data' },
         status: 200,
+        statusText: 'OK',
         headers: { 'content-type': 'application/json' },
-      };
+        config: { headers: {} }
+      } as unknown as AxiosResponse;
 
       const mockAxiosInstance = mockedAxios.create();
       (mockAxiosInstance.get as jest.Mock).mockResolvedValue(mockResponse);
@@ -91,33 +93,54 @@ describe('MastodonClient', () => {
     });
 
     it('should retry on 500 errors', async () => {
+      // Create a real instance of MastodonClient with our test config
+      const testClient = new MastodonClient({
+        baseURL: 'https://test.com',
+        maxRetries: 2,
+        retryDelay: 10 // Short delay for tests
+      });
+      
+      // Mock the axios client instance directly
+      const mockClientGet = jest.fn();
+      const axiosInstance = (testClient as any).client;
+      
+      // Save original get method and replace with our mock
+      const originalGet = axiosInstance.get;
+      axiosInstance.get = mockClientGet;
+      
+      // First two calls fail with 500, third succeeds
       const serverError = {
         response: { 
           status: 500,
-          data: {
-            error: 'Server error',
-          },
+          data: { error: 'Server error' }
         },
         config: { url: '/test' },
-        isAxiosError: true,
+        isAxiosError: true
       };
-
+      
       const successResponse = {
         data: { test: 'data' },
         status: 200,
         headers: {},
-      };
-
-      const mockAxiosInstance = mockedAxios.create();
-      const mockGet = mockAxiosInstance.get as jest.Mock;
-      mockGet
+        statusText: 'OK',
+        config: { headers: {} }
+      } as unknown as AxiosResponse;
+      
+      // First 2 calls fail with 500 error, third call succeeds
+      mockClientGet
         .mockRejectedValueOnce(serverError)
         .mockRejectedValueOnce(serverError)
         .mockResolvedValueOnce(successResponse);
-
-      const response = await client.get('/test');
+        
+      // Make the call that should trigger the retry logic
+      const response = await testClient.get('/test');
+      
+      // Restore original get method
+      axiosInstance.get = originalGet;
+      
+      // Verify success and that we called get 3 times
       expect(response).toEqual(successResponse);
-      expect(mockGet).toHaveBeenCalledTimes(3);
+      expect(mockClientGet).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -126,8 +149,10 @@ describe('MastodonClient', () => {
       const mockResponse = {
         data: { test: 'data' },
         status: 200,
+        statusText: 'OK',
         headers: { 'content-type': 'application/json' },
-      };
+        config: { headers: {} }
+      } as unknown as AxiosResponse;
 
       const mockAxiosInstance = mockedAxios.create();
       (mockAxiosInstance.post as jest.Mock).mockResolvedValue(mockResponse);
@@ -142,8 +167,10 @@ describe('MastodonClient', () => {
       const mockResponse = {
         data: { test: 'data' },
         status: 200,
+        statusText: 'OK',
         headers: { 'content-type': 'application/json' },
-      };
+        config: { headers: {} }
+      } as unknown as AxiosResponse;
 
       const mockAxiosInstance = mockedAxios.create();
       (mockAxiosInstance.put as jest.Mock).mockResolvedValue(mockResponse);
@@ -158,8 +185,10 @@ describe('MastodonClient', () => {
       const mockResponse = {
         data: { test: 'data' },
         status: 200,
+        statusText: 'OK',
         headers: { 'content-type': 'application/json' },
-      };
+        config: { headers: {} }
+      } as unknown as AxiosResponse;
 
       const mockAxiosInstance = mockedAxios.create();
       (mockAxiosInstance.delete as jest.Mock).mockResolvedValue(mockResponse);
