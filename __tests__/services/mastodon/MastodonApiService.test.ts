@@ -1,6 +1,7 @@
 import { MastodonApiService } from '../../../services/mastodon/MastodonApiService';
 import { MastodonClient } from '../../../services/mastodon/MastodonClient';
 import { MastodonAccount, MastodonStatus } from '../../../services/mastodon/types';
+import { AxiosResponse } from 'axios';
 
 jest.mock('../../../services/mastodon/MastodonClient');
 
@@ -74,8 +75,9 @@ describe('MastodonApiService', () => {
       const mockResponse = {
         data: [mockStatus],
         status: 200,
-        headers: {},
-      };
+        statusText: 'OK',
+        headers: {}
+      } as AxiosResponse;
 
       mockClient.get.mockResolvedValue(mockResponse);
 
@@ -88,8 +90,9 @@ describe('MastodonApiService', () => {
       const mockResponse = {
         data: [mockStatus],
         status: 200,
-        headers: {},
-      };
+        statusText: 'OK',
+        headers: {}
+      } as AxiosResponse;
 
       mockClient.get.mockResolvedValue(mockResponse);
 
@@ -103,8 +106,9 @@ describe('MastodonApiService', () => {
       const mockResponse = {
         data: mockAccount,
         status: 200,
-        headers: {},
-      };
+        statusText: 'OK',
+        headers: {}
+      } as AxiosResponse;
 
       mockClient.get.mockResolvedValue(mockResponse);
 
@@ -119,8 +123,9 @@ describe('MastodonApiService', () => {
       const mockResponse = {
         data: mockStatus,
         status: 200,
-        headers: {},
-      };
+        statusText: 'OK',
+        headers: {}
+      } as AxiosResponse;
 
       mockClient.post.mockResolvedValue(mockResponse);
 
@@ -145,8 +150,9 @@ describe('MastodonApiService', () => {
       const mockResponse = {
         data: { ...mockStatus, favourited: true },
         status: 200,
-        headers: {},
-      };
+        statusText: 'OK',
+        headers: {}
+      } as AxiosResponse;
 
       mockClient.post.mockResolvedValue(mockResponse);
 
@@ -161,8 +167,9 @@ describe('MastodonApiService', () => {
       const mockResponse = {
         data: { ...mockStatus, reblogged: true },
         status: 200,
-        headers: {},
-      };
+        statusText: 'OK',
+        headers: {}
+      } as AxiosResponse;
 
       mockClient.post.mockResolvedValue(mockResponse);
 
@@ -177,8 +184,9 @@ describe('MastodonApiService', () => {
       const mockResponse = {
         data: { ...mockAccount, following: true },
         status: 200,
-        headers: {},
-      };
+        statusText: 'OK',
+        headers: {}
+      } as AxiosResponse;
 
       mockClient.post.mockResolvedValue(mockResponse);
 
