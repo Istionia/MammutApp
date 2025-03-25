@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { MastodonConfig, MastodonError, MastodonResponse } from './types';
 
 export class MastodonClient {
@@ -80,6 +80,10 @@ export class MastodonClient {
     try {
       return await this.client.get<T>(url, config);
     } catch (error) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response?.status && axiosError.response.status >= 500) {
+        return this.client.get<T>(url, config); // Let the interceptor handle the retry
+      }
       throw this.handleError(error);
     }
   }
@@ -88,6 +92,10 @@ export class MastodonClient {
     try {
       return await this.client.post<T>(url, data, config);
     } catch (error) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response?.status && axiosError.response.status >= 500) {
+        return this.client.post<T>(url, data, config); // Let the interceptor handle the retry
+      }
       throw this.handleError(error);
     }
   }
@@ -96,6 +104,10 @@ export class MastodonClient {
     try {
       return await this.client.put<T>(url, data, config);
     } catch (error) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response?.status && axiosError.response.status >= 500) {
+        return this.client.put<T>(url, data, config); // Let the interceptor handle the retry
+      }
       throw this.handleError(error);
     }
   }
@@ -104,13 +116,18 @@ export class MastodonClient {
     try {
       return await this.client.delete<T>(url, config);
     } catch (error) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response?.status && axiosError.response.status >= 500) {
+        return this.client.delete<T>(url, config); // Let the interceptor handle the retry
+      }
       throw this.handleError(error);
     }
   }
 
   private handleError(error: any): never {
     if (error.isAxiosError) {
-      throw new Error(error.message);
+      const message = error.response?.data?.error || error.message || 'An unexpected error occurred';
+      throw new Error(message);
     }
     throw new Error(error.message || 'An unexpected error occurred');
   }
