@@ -123,7 +123,8 @@ Mammut will include all standard Mastodon features plus:
       - Forest theme (biome-based)
       - Desert theme (biome-based)
       - Tundra theme (biome-based)
-      - Ocean theme (biome-based)
+      - Reef theme (biome-based)
+      - Savannah theme (biome-based)
       - Custom theme (user can adjust primary colors)
 
    4. Create a ThemeProvider component that:

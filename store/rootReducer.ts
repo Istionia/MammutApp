@@ -4,6 +4,7 @@ import { persistReducer } from 'redux-persist';
 
 import authReducer from '@/store/slices/authSlice';
 import themeReducer from '@/store/slices/themeSlice';
+import instancesReducer from '@/store/slices/instancesSlice';
 
 // Configuration for the root persisted reducer
 export const rootPersistConfig = {
@@ -19,9 +20,17 @@ const authPersistConfig = {
   whitelist: ['token', 'refreshToken', 'instanceUrl'], // Only persist authentication tokens
 };
 
+// Instances persistence configuration
+const instancesPersistConfig = {
+  key: 'instances',
+  storage: AsyncStorage,
+  whitelist: ['recentInstances', 'popularInstances'], // Persist both recent and popular instances
+};
+
 // Create the root reducer by combining all slice reducers
 export const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
   theme: themeReducer,
+  instances: persistReducer(instancesPersistConfig, instancesReducer),
   // Add more reducers here as they are created
 }); 
