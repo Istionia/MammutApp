@@ -57,6 +57,15 @@ export class MastodonClient {
         // Reset retry count
         this.retryCount = 0;
 
+        // Transform error response
+        if (error.response?.data?.error) {
+          error.message = error.response.data.error;
+        } else if (error.request) {
+          error.message = 'Network error';
+        } else {
+          error.message = error.message || 'An unexpected error occurred';
+        }
+
         return Promise.reject(error);
       }
     );
@@ -101,11 +110,7 @@ export class MastodonClient {
 
   private handleError(error: any): never {
     if (error.isAxiosError) {
-      if (error.response?.data?.error) {
-        throw new Error(error.response.data.error);
-      } else if (error.request) {
-        throw new Error('Network error');
-      }
+      throw new Error(error.message);
     }
     throw new Error(error.message || 'An unexpected error occurred');
   }
