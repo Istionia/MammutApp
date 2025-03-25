@@ -47,15 +47,17 @@ export class MastodonClient {
       async (error) => {
         const originalRequest = error.config;
 
-        // Handle retries
-        if (error.response?.status >= 500 && this.retryCount < this.config.maxRetries!) {
-          this.retryCount++;
+        // Handle retries for 500 errors
+        if (error.response?.status >= 500 && (!originalRequest._retry || originalRequest._retry < this.config.maxRetries!)) {
+          originalRequest._retry = (originalRequest._retry || 0) + 1;
           await new Promise((resolve) => setTimeout(resolve, this.config.retryDelay!));
-          return this.client(originalRequest);
+          try {
+            return await this.client(originalRequest);
+          } catch (retryError) {
+            // If retry fails, continue with error handling
+            error = retryError;
+          }
         }
-
-        // Reset retry count
-        this.retryCount = 0;
 
         // Transform error response
         if (error.response?.data?.error) {
@@ -77,50 +79,74 @@ export class MastodonClient {
   }
 
   public async get<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-    try {
-      return await this.client.get<T>(url, config);
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      if (axiosError.response?.status && axiosError.response.status >= 500) {
-        return this.client.get<T>(url, config); // Let the interceptor handle the retry
+    let retries = 0;
+    const maxRetries = this.config.maxRetries || 3;
+    
+    while (true) {
+      try {
+        return await this.client.get<T>(url, config);
+      } catch (error: any) {
+        if (error.response?.status >= 500 && retries < maxRetries) {
+          retries++;
+          await new Promise(resolve => setTimeout(resolve, this.config.retryDelay || 1000));
+          continue;
+        }
+        throw this.handleError(error);
       }
-      throw this.handleError(error);
     }
   }
 
   public async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-    try {
-      return await this.client.post<T>(url, data, config);
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      if (axiosError.response?.status && axiosError.response.status >= 500) {
-        return this.client.post<T>(url, data, config); // Let the interceptor handle the retry
+    let retries = 0;
+    const maxRetries = this.config.maxRetries || 3;
+    
+    while (true) {
+      try {
+        return await this.client.post<T>(url, data, config);
+      } catch (error: any) {
+        if (error.response?.status >= 500 && retries < maxRetries) {
+          retries++;
+          await new Promise(resolve => setTimeout(resolve, this.config.retryDelay || 1000));
+          continue;
+        }
+        throw this.handleError(error);
       }
-      throw this.handleError(error);
     }
   }
 
   public async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-    try {
-      return await this.client.put<T>(url, data, config);
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      if (axiosError.response?.status && axiosError.response.status >= 500) {
-        return this.client.put<T>(url, data, config); // Let the interceptor handle the retry
+    let retries = 0;
+    const maxRetries = this.config.maxRetries || 3;
+    
+    while (true) {
+      try {
+        return await this.client.put<T>(url, data, config);
+      } catch (error: any) {
+        if (error.response?.status >= 500 && retries < maxRetries) {
+          retries++;
+          await new Promise(resolve => setTimeout(resolve, this.config.retryDelay || 1000));
+          continue;
+        }
+        throw this.handleError(error);
       }
-      throw this.handleError(error);
     }
   }
 
   public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-    try {
-      return await this.client.delete<T>(url, config);
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      if (axiosError.response?.status && axiosError.response.status >= 500) {
-        return this.client.delete<T>(url, config); // Let the interceptor handle the retry
+    let retries = 0;
+    const maxRetries = this.config.maxRetries || 3;
+    
+    while (true) {
+      try {
+        return await this.client.delete<T>(url, config);
+      } catch (error: any) {
+        if (error.response?.status >= 500 && retries < maxRetries) {
+          retries++;
+          await new Promise(resolve => setTimeout(resolve, this.config.retryDelay || 1000));
+          continue;
+        }
+        throw this.handleError(error);
       }
-      throw this.handleError(error);
     }
   }
 
